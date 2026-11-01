@@ -89,6 +89,7 @@ Append rows below the last used row of POSTIZ. Fill **only** these columns:
 | I | Hashtags | Step 5 |
 | J | Approval | `Draft` |
 | P | Slides | public image URLs, comma-separated, in slide order |
+| R | Note | optional: anything a reader should know about this pick |
 **Slides:** upload each image with Postiz `uploadFromUrlTool` (url = the Drive `uc?export=download&id=` link) and use the returned `uploads.postiz.com` paths. Fallback without Postiz: the Drive `uc?export=download&id=` links themselves (the script uploads them at schedule time; the Grid image may stay blank).
 **Never write** F, K, L, M, N, O, Q (formulas and script-owned). Never edit a row that already has a Post ID (L) unless the user asks. Never set Approval to Ready yourself.
 
@@ -103,8 +104,11 @@ Stop there. Don't follow up unless asked.
 A person sets Approval → `Rejected` when a scene shouldn't post. The row stays (history), Grid hides it, the script takes it out of Postiz if it was scheduled. When the user asks for a replacement:
 1. Ask once, in one line, why it was rejected if they didn't say (face, outfit, vibe, repeat). Use the reason when picking.
 2. Pick a new scene for the **same slot** (same date and time) through Steps 2–5, keeping the neighbours rule against the posts around it.
-3. Add it as a **new row** with Approval `Draft`. Never edit or delete the Rejected row.
-4. Send the updated grid preview.
+3. Add it as a **new row** with Approval `Draft`. Never edit or delete the Rejected row, except its Note.
+4. Write both Notes (column R), so readers understand without asking:
+   - Rejected row: `Rejected (<who>): <reason>. Replaced by <Run ID>, row <n>.`
+   - New row: `Replaces <Run ID> (row <n>, rejected: <reason>). <Why this scene fits the slot: same city/time, contrast with neighbours, what it fixes>.`
+5. Send the updated grid preview.
 If they just want the slot gone, do nothing: Grid already moved up.
 
 ## Step 8 — Fixing errors (when asked)
@@ -137,7 +141,7 @@ Already-live posts can't be changed from the sheet; edits happen in the IG app.
 - A3 `=IFERROR(MAP(SPLIT(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!P2:P), ","), LAMBDA(u, IMAGE(u))), "")`
 - C1 `=IFERROR(IF(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!M2:M)="", "(not in Postiz yet)", HYPERLINK(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!M2:M), "Open in Postiz ↗")), "")`
 
-Never type into Grid or Carousel output cells: one formula fills each block, typing over it breaks it (#REF!). If you add columns to POSTIZ, add them to the right of Q; inserting in the middle shifts the script's column map (`C` in `postiz-sync.gs`).
+Never type into Grid or Carousel output cells: one formula fills each block, typing over it breaks it (#REF!). Column R (Note) is free text for people and Claude; the script never writes it. If you add columns to POSTIZ, add them to the right of R; inserting in the middle shifts the script's column map (`C` in `postiz-sync.gs`).
 
 ## Apps Script (`scripts/postiz-sync.gs`)
 Install once per sheet, by the person whose Postiz key it uses:
