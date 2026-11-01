@@ -42,7 +42,7 @@ Defaults if the user doesn't say: **next 9 posts** (one full grid) for the accou
 |---|---|
 | Account (Postiz channel name, e.g. `amii`) | none, ask |
 | How many posts / which dates | 9 posts, 3 per day from tomorrow |
-| Times (Bangkok) | 09:00 · 14:00 · 19:00–21:00 |
+| Times (Bangkok) | 3 slots a day, staggered by account so two accounts never post at the same minute: amii 09:00 · 14:00 · 19:00–21:00, hanna_ubabe 10:00 · 15:00 · 20:00, kristy 11:00 · 16:00 · 21:00. A new account takes the next free hour. |
 Never plan a time less than 1 hour from now: the script refuses anything under 5 minutes, and people need time to approve.
 
 ## Step 2 — Scene pool
@@ -73,7 +73,16 @@ Render `grid_preview.py` with all covers newest first, including posts already l
 - English, **one short line** in her voice: casual, a little dry, first person or no subject, lowercase is fine. Tie it to the moment in the image or the story of the day.
 - **Hashtags:** 3, about place and moment (`#tempelhof #berlin #sundaylight`).
 - **Never** `#sher` or `#aigenerated`, never brand or product names in hashtags, no "AI" wording.
-- Voice by character (cast): Amii · pretty girl, 25, JP/UK · Hanna · cool girl, 22, KR/CA · Kristy · sexy girl, 24, RU/AU · Claire · rich girl, 23, PH/US. A new character: ask for one line about her before writing.
+- Voice by character (cast), with her DIRECTOR tag and Postiz account:
+
+| Character | DIRECTOR | Postiz account | Voice |
+|---|---|---|---|
+| Amii | `@Amii` | `amii` | pretty girl, 25, JP/UK |
+| Hanna | `@Hanna` | `hanna_ubabe` | cool girl, 22, KR/CA |
+| Kristy | `@Kristy` | `kristy` | sexy girl, 24, RU/AU |
+| Claire | `@Claire` | not connected yet | rich girl, 23, PH/US |
+
+  Check the Postiz names with `integrationList` each run; they win over this table. A new character: ask for one line about her before writing.
 
 ## Step 6 — Write Draft rows
 Append rows below the last used row of POSTIZ. Fill **only** these columns:
