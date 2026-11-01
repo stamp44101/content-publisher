@@ -33,7 +33,7 @@ DIRECTOR (ready scenes) ──Claude──▶ POSTIZ tab: Draft rows (QA'd image
 - Already installed: **don't install it again** on this sheet; a second copy would schedule every post twice.
 - The triggers run as Stamp. They stop if Stamp loses edit access to the sheet or revokes the script; failure emails go to Stamp.
 - To update the code: Stamp pastes the new `postiz-sync.gs` over the old one and runs `setup` again (it replaces the old triggers).
-- Postiz channels connected: `amii` (Instagram). Rows for any other account show Error until that channel is connected in Postiz under the same name.
+- Postiz channels connected (checked 1 Nov 2026): `amii`, `hanna_ubabe`, `kristy` (all Instagram). Claire is not connected yet. The Account column must match these names exactly; the skill checks `integrationList` each run.
 
 ## Use
 Say what you need in plain words, e.g. "plan the next 9 posts for Amii", "fill Hanna's grid for next week", "fix the Error rows".
