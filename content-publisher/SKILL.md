@@ -146,6 +146,7 @@ Already-live posts can't be changed from the sheet; edits happen in the IG app.
 **Grid** (B1 = account dropdown; Rejected rows are left out):
 - A2 (cover images, 3 per row, newest first) `=IFERROR(MAP(WRAPROWS(SORT(FILTER(POSTIZ!O2:O, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FILTER(POSTIZ!A2:A+POSTIZ!B2:B, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FALSE), 3, ""), LAMBDA(u, IF(u="", "", IMAGE(u)))), "")`
 - E2 (cards; a live post's card is a link to it on Instagram, from S) `=IFERROR(MAP(WRAPROWS(SORT(FILTER(ROW(POSTIZ!A2:A), POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FILTER(POSTIZ!A2:A+POSTIZ!B2:B, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FALSE), 3, ""), LAMBDA(r, IF(r="", "", LET(t, TEXT(INDEX(POSTIZ!A:A, r)+INDEX(POSTIZ!B:B, r), "d mmm hh:mm")&" · "&INDEX(POSTIZ!F:F, r)&CHAR(10)&INDEX(POSTIZ!H:H, r)&CHAR(10)&INDEX(POSTIZ!I:I, r)&CHAR(10)&INDEX(POSTIZ!K:K, r), u, INDEX(POSTIZ!S:S, r), IF(u="", t, HYPERLINK(u, t&CHAR(10)&"▸ open on Instagram")))))), "")`
+- Card colours (conditional format on E2:G60, custom formula on the status line of the card): `=ISNUMBER(SEARCH(CHAR(10)&"Published", E2))` light green · `…"Scheduled"…` light yellow · `…"Error"…` light red · Draft / Ready stay white.
 - Sort keys must be numeric (`A+B`); a text sort key makes SORT return #VALUE!.
 
 **Carousel** (B1 = Run ID dropdown from `POSTIZ!E2:E`):
