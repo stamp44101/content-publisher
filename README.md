@@ -39,6 +39,8 @@ DIRECTOR (ready scenes) ──Claude──▶ POSTIZ tab: Draft rows (QA'd image
 Say what you need in plain words, e.g. "plan the next 9 posts for Amii", "fill Hanna's grid for next week", "fix the Error rows".
 You get: a grid preview image and a table. Then open the sheet, check **Grid** and **Carousel**, and set **Approval → Ready** on what you approve, or **Rejected** on what should not post (it leaves Grid; never delete rows).
 
+Carousel order comes from the **Slides** column in POSTIZ: the first link is the cover and the grid tile; Instagram shows the slides in the same order. Reorder the links there to reorder the carousel.
+
 To change a scheduled post: set it back to **Draft**, edit, then **Ready** again.
 
 To only approve (no Claude needed): get edit access to the sheet and flip Ready. The script does the rest.

@@ -98,6 +98,7 @@ Append new blocks below the last used row of POSTIZ, in time order within the bl
 | J | Approval | `Draft` |
 | P | Slides | public image URLs, comma-separated, in slide order |
 | R | Note | optional: anything a reader should know about this pick |
+**Slides (P) is the single source of carousel order.** The order of the URLs in P is the order everywhere: the script sends them to Postiz in that order (so Instagram shows them in that order), the first URL becomes Cover (O, hidden) and therefore the Image column and the Grid tile, Format counts them, and the Carousel tab shows them left to right. To reorder a carousel, reorder the URLs in P and nothing else (on a scheduled row: Draft, reorder, Ready). Strongest frame first, detail frames last (Step 4).
 **Slides:** upload each image with Postiz `uploadFromUrlTool` (url = the Drive `uc?export=download&id=` link) and use the returned `uploads.postiz.com` paths. Fallback without Postiz: the Drive `uc?export=download&id=` links themselves (the script uploads them at schedule time; the Grid image may stay blank).
 **Never write** F, G, K, L, M, N, O, Q (formulas and script-owned). The source image link is not copied: it stays in DIRECTOR under the Run ID. Never edit a row that already has a Post ID (L) unless the user asks. Never set Approval to Ready yourself.
 
