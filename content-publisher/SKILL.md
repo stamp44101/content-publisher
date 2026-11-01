@@ -100,7 +100,7 @@ Append new blocks below the last used row of POSTIZ, in time order within the bl
 | R | Note | optional: anything a reader should know about this pick |
 **Slides (P) is the single source of carousel order.** The order of the URLs in P is the order everywhere: the script sends them to Postiz in that order (so Instagram shows them in that order), the first URL becomes Cover (O, hidden) and therefore the Image column and the Grid tile, Format counts them, and the Carousel tab shows them left to right. To reorder a carousel, reorder the URLs in P and nothing else (on a scheduled row: Draft, reorder, Ready). Strongest frame first, detail frames last (Step 4).
 **Slides:** upload each image with Postiz `uploadFromUrlTool` (url = the Drive `uc?export=download&id=` link) and use the returned `uploads.postiz.com` paths. Fallback without Postiz: the Drive `uc?export=download&id=` links themselves (the script uploads them at schedule time; the Grid image may stay blank).
-**Never write** F, G, K, L, M, N, O, Q (formulas and script-owned). The source image link is not copied: it stays in DIRECTOR under the Run ID. Never edit a row that already has a Post ID (L) unless the user asks. Never set Approval to Ready yourself.
+**Never write** F, G, K, L, M, N, O, Q, S (formulas and script-owned). The source image link is not copied: it stays in DIRECTOR under the Run ID. Never edit a row that already has a Post ID (L) unless the user asks. Never set Approval to Ready yourself.
 
 ## Step 7 — Hand-off
 Send the grid preview image and a short table (date · time · scene · caption). Then tell the user, in 2–3 lines:
@@ -145,15 +145,15 @@ Already-live posts can't be changed from the sheet; edits happen in the IG app.
 
 **Grid** (B1 = account dropdown; Rejected rows are left out):
 - A2 (cover images, 3 per row, newest first) `=IFERROR(MAP(WRAPROWS(SORT(FILTER(POSTIZ!O2:O, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FILTER(POSTIZ!A2:A+POSTIZ!B2:B, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FALSE), 3, ""), LAMBDA(u, IF(u="", "", IMAGE(u)))), "")`
-- E2 (cards) `=IFERROR(WRAPROWS(SORT(FILTER(TEXT(POSTIZ!A2:A+POSTIZ!B2:B, "d mmm hh:mm")&" · "&POSTIZ!F2:F&CHAR(10)&POSTIZ!H2:H&CHAR(10)&POSTIZ!I2:I&CHAR(10)&POSTIZ!K2:K, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FILTER(POSTIZ!A2:A+POSTIZ!B2:B, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FALSE), 3, ""), "")`
+- E2 (cards; a live post's card is a link to it on Instagram, from S) `=IFERROR(MAP(WRAPROWS(SORT(FILTER(ROW(POSTIZ!A2:A), POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FILTER(POSTIZ!A2:A+POSTIZ!B2:B, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FALSE), 3, ""), LAMBDA(r, IF(r="", "", LET(t, TEXT(INDEX(POSTIZ!A:A, r)+INDEX(POSTIZ!B:B, r), "d mmm hh:mm")&" · "&INDEX(POSTIZ!F:F, r)&CHAR(10)&INDEX(POSTIZ!H:H, r)&CHAR(10)&INDEX(POSTIZ!I:I, r)&CHAR(10)&INDEX(POSTIZ!K:K, r), u, INDEX(POSTIZ!S:S, r), IF(u="", t, HYPERLINK(u, t&CHAR(10)&"▸ open on Instagram")))))), "")`
 - Sort keys must be numeric (`A+B`); a text sort key makes SORT return #VALUE!.
 
 **Carousel** (B1 = Run ID dropdown from `POSTIZ!E2:E`):
 - A2 `=IFERROR(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!C2:C)&"  ·  "&TEXT(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!A2:A)+XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!B2:B), "d mmm hh:mm")&"  ·  "&XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!F2:F)&"  ·  "&XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!K2:K)&"  ·  "&XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!H2:H), "")`
 - A3 `=IFERROR(MAP(SPLIT(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!P2:P), ","), LAMBDA(u, IMAGE(u))), "")`
-- C1 `=IFERROR(IF(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!M2:M)="", "(not in Postiz yet)", HYPERLINK(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!M2:M), "Open in Postiz ↗")), "")`
+- C1 (Instagram link once live, else Postiz preview) `=IFERROR(IF(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!S2:S)<>"", HYPERLINK(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!S2:S), "Open on Instagram ↗"), IF(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!M2:M)="", "(not in Postiz yet)", HYPERLINK(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!M2:M), "Open in Postiz ↗"))), "")`
 
-Never type into Grid or Carousel output cells: one formula fills each block, typing over it breaks it (#REF!). Column R (Note) is free text for people and Claude; the script never writes it. If you add columns to POSTIZ, add them to the right of R; inserting in the middle shifts the script's column map (`C` in `postiz-sync.gs`).
+Never type into Grid or Carousel output cells: one formula fills each block, typing over it breaks it (#REF!). Column R (Note) is free text for people and Claude; the script never writes it. Column S (IG Link) is written by the script once a post is live. If you add columns to POSTIZ, add them to the right of S; inserting in the middle shifts the script's column map (`C` in `postiz-sync.gs`).
 
 ## Apps Script (`scripts/postiz-sync.gs`)
 Install once per sheet, by the person whose Postiz key it uses:
@@ -171,7 +171,7 @@ What it does on every edit of POSTIZ:
 **Edits made through the Sheets API do not fire the script** (installable onEdit only runs for edits made in the Sheets UI). When the user asks you to change a scheduled row yourself: delete the old post in Postiz (`deletePostTool`), schedule the new one (`integrationSchedulePostTool`, same caption, hashtags and Slides, time converted to UTC), then write the new Post ID to L, the new Date/Time to A/B, and a line to Log (Q) like `<d MMM HH:mm> · Claude (asked by <who>) · rescheduled`, plus the reason in Note. Verify with `postsListTool` afterwards.
 **House rule for changing a scheduled row:** set Approval → Draft, make all the edits, check them, then set Ready once. Editing a scheduled row directly re-schedules on every cell edit, so half-finished values can be scheduled in between. A single small time shift on the same day may be edited directly. Tell people this rule whenever they ask how to change a post.
 Deleting a whole row does **not** trigger the script: a scheduled post would still go out. Set it to Rejected instead of deleting.
-Plus: every 30 minutes it writes Postiz failures into Error. Formula and script columns are protected with a warning. Everyone with edit access can approve; the script runs as the installer. Triggers run until the installer loses access or revokes it; Google emails a failure summary if it breaks.
+Plus: every 15 minutes it syncs from Postiz: failures into Error, and the live Instagram link into IG Link (S), which Grid and Carousel turn into clickable links. Formula and script columns are protected with a warning. Everyone with edit access can approve; the script runs as the installer. Triggers run until the installer loses access or revokes it; Google emails a failure summary if it breaks.
 
 ## Rules
 - Nothing goes to Postiz without a person's Ready or an explicit "post it" in chat.
@@ -194,7 +194,7 @@ Plus: every 30 minutes it writes Postiz failures into Error. Formula and script 
  * - Approval → Draft or Rejected (post not live yet): removes it from Postiz, clears the Post ID.
  * - Edit Date/Time/Account/Caption/Hashtags/Slides on a scheduled row: re-schedules with the new values.
  * - Rows already live are never changed; edits there only get a note in Log.
- * - Every 30 min: writes Postiz failures into Error.
+ * - Every 15 min: syncs from Postiz: failures into Error, the live Instagram link into IG Link.
  * Every action is written to the Log column (who, what, when).
  *
  * Setup (once): Script Properties → POSTIZ_API_KEY; then run setup().
@@ -203,7 +203,7 @@ Plus: every 30 minutes it writes Postiz failures into Error. Formula and script 
 const API = 'https://api.postiz.com/public/v1';
 const SHEET = 'POSTIZ';
 const C = { date: 1, time: 2, account: 3, caption: 8, hashtags: 9, approval: 10, status: 11,
-            postId: 12, preview: 13, error: 14, cover: 15, slides: 16, log: 17 };      // 1-based
+            postId: 12, preview: 13, error: 14, cover: 15, slides: 16, log: 17, note: 18, igLink: 19 }; // 1-based
 const CONTENT_COLS = [C.date, C.time, C.account, C.caption, C.hashtags, C.slides];
 const MIN_LEAD_MIN = 5;
 
@@ -211,21 +211,22 @@ function setup() {
   ScriptApp.getProjectTriggers().forEach(t => ScriptApp.deleteTrigger(t));
   const ss = SpreadsheetApp.getActive();
   ScriptApp.newTrigger('onSheetEdit').forSpreadsheet(ss).onEdit().create();
-  ScriptApp.newTrigger('checkErrors').timeBased().everyMinutes(30).create();
+  ScriptApp.newTrigger('syncFromPostiz').timeBased().everyMinutes(15).create();
 
   const sh = ss.getSheetByName(SHEET);
   sh.getRange(1, C.log).setValue('Log');
+  sh.getRange(1, C.igLink).setValue('IG Link');
   // Warn anyone who types into columns owned by formulas or this script.
   sh.getProtections(SpreadsheetApp.ProtectionType.RANGE)
     .filter(p => p.getDescription() === 'auto').forEach(p => p.remove());
-  [C.status, C.postId, C.preview, C.error, C.cover, C.log].forEach(col =>
+  [C.status, C.postId, C.preview, C.error, C.cover, C.log, C.igLink].forEach(col =>
     sh.getRange(1, col, sh.getMaxRows(), 1).protect().setDescription('auto').setWarningOnly(true));
 }
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Postiz')
     .addItem('Schedule all Ready rows', 'scheduleAllReady')
-    .addItem('Check for errors', 'checkErrors')
+    .addItem('Sync from Postiz (errors + IG links)', 'syncFromPostiz')
     .addToUi();
 }
 
@@ -255,7 +256,10 @@ function scheduleAllReady() {
   for (let row = 2; row <= sh.getLastRow(); row++) handleRow_(sh, row, true, false, 'menu');
 }
 
-function checkErrors() {
+// Kept so a trigger made by an older setup() still works.
+function checkErrors() { syncFromPostiz(); }
+
+function syncFromPostiz() {
   const sh = SpreadsheetApp.getActive().getSheetByName(SHEET);
   const last = sh.getLastRow();
   if (last < 2) return;
@@ -268,7 +272,11 @@ function checkErrors() {
   posts.forEach(p => byId[p.id] = p);
   ids.forEach((id, i) => {
     const p = id && byId[id];
-    if (p && p.state === 'ERROR') sh.getRange(i + 2, C.error).setValue(p.error || 'Postiz reported an error');
+    if (!p) return;
+    const row = i + 2;
+    if (p.state === 'ERROR') sh.getRange(row, C.error).setValue(p.error || 'Postiz reported an error');
+    if (p.state === 'PUBLISHED' && p.releaseURL && sh.getRange(row, C.igLink).getValue() !== p.releaseURL)
+      sh.getRange(row, C.igLink).setValue(p.releaseURL);
   });
 }
 

@@ -4,7 +4,7 @@
  * - Approval → Draft or Rejected (post not live yet): removes it from Postiz, clears the Post ID.
  * - Edit Date/Time/Account/Caption/Hashtags/Slides on a scheduled row: re-schedules with the new values.
  * - Rows already live are never changed; edits there only get a note in Log.
- * - Every 30 min: writes Postiz failures into Error.
+ * - Every 15 min: syncs from Postiz: failures into Error, the live Instagram link into IG Link.
  * Every action is written to the Log column (who, what, when).
  *
  * Setup (once): Script Properties → POSTIZ_API_KEY; then run setup().
@@ -13,7 +13,7 @@
 const API = 'https://api.postiz.com/public/v1';
 const SHEET = 'POSTIZ';
 const C = { date: 1, time: 2, account: 3, caption: 8, hashtags: 9, approval: 10, status: 11,
-            postId: 12, preview: 13, error: 14, cover: 15, slides: 16, log: 17 };      // 1-based
+            postId: 12, preview: 13, error: 14, cover: 15, slides: 16, log: 17, note: 18, igLink: 19 }; // 1-based
 const CONTENT_COLS = [C.date, C.time, C.account, C.caption, C.hashtags, C.slides];
 const MIN_LEAD_MIN = 5;
 
@@ -21,21 +21,22 @@ function setup() {
   ScriptApp.getProjectTriggers().forEach(t => ScriptApp.deleteTrigger(t));
   const ss = SpreadsheetApp.getActive();
   ScriptApp.newTrigger('onSheetEdit').forSpreadsheet(ss).onEdit().create();
-  ScriptApp.newTrigger('checkErrors').timeBased().everyMinutes(30).create();
+  ScriptApp.newTrigger('syncFromPostiz').timeBased().everyMinutes(15).create();
 
   const sh = ss.getSheetByName(SHEET);
   sh.getRange(1, C.log).setValue('Log');
+  sh.getRange(1, C.igLink).setValue('IG Link');
   // Warn anyone who types into columns owned by formulas or this script.
   sh.getProtections(SpreadsheetApp.ProtectionType.RANGE)
     .filter(p => p.getDescription() === 'auto').forEach(p => p.remove());
-  [C.status, C.postId, C.preview, C.error, C.cover, C.log].forEach(col =>
+  [C.status, C.postId, C.preview, C.error, C.cover, C.log, C.igLink].forEach(col =>
     sh.getRange(1, col, sh.getMaxRows(), 1).protect().setDescription('auto').setWarningOnly(true));
 }
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Postiz')
     .addItem('Schedule all Ready rows', 'scheduleAllReady')
-    .addItem('Check for errors', 'checkErrors')
+    .addItem('Sync from Postiz (errors + IG links)', 'syncFromPostiz')
     .addToUi();
 }
 
@@ -65,7 +66,10 @@ function scheduleAllReady() {
   for (let row = 2; row <= sh.getLastRow(); row++) handleRow_(sh, row, true, false, 'menu');
 }
 
-function checkErrors() {
+// Kept so a trigger made by an older setup() still works.
+function checkErrors() { syncFromPostiz(); }
+
+function syncFromPostiz() {
   const sh = SpreadsheetApp.getActive().getSheetByName(SHEET);
   const last = sh.getLastRow();
   if (last < 2) return;
@@ -78,7 +82,11 @@ function checkErrors() {
   posts.forEach(p => byId[p.id] = p);
   ids.forEach((id, i) => {
     const p = id && byId[id];
-    if (p && p.state === 'ERROR') sh.getRange(i + 2, C.error).setValue(p.error || 'Postiz reported an error');
+    if (!p) return;
+    const row = i + 2;
+    if (p.state === 'ERROR') sh.getRange(row, C.error).setValue(p.error || 'Postiz reported an error');
+    if (p.state === 'PUBLISHED' && p.releaseURL && sh.getRange(row, C.igLink).getValue() !== p.releaseURL)
+      sh.getRange(row, C.igLink).setValue(p.releaseURL);
   });
 }
 
