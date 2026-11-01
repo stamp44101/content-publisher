@@ -15,7 +15,8 @@ Reply in the user's language (casual Thai by default) with English technical ter
 | Pick + QA scenes | ✓ | | |
 | Order the feed, write captions | ✓ | can edit any cell they own | |
 | Write Draft rows | ✓ | | |
-| Approve (Draft → Ready) | **never on its own** | ✓ | |
+| Approve (Draft → Ready) or reject (→ Rejected) | **never on its own** | ✓ | |
+| Replace a Rejected slot | ✓ when asked | | |
 | Schedule / unschedule / reschedule in Postiz | only if the user asks in chat | | ✓ on every edit |
 | Status, Preview, Cover, Format | | | formulas |
 | Errors from Postiz | fixes on request | | writes Error every 30 min |
@@ -47,7 +48,7 @@ Never plan a time less than 1 hour from now: the script refuses anything under 5
 ## Step 2 — Scene pool
 1. Read DIRECTOR for the account's character (`Character` column, e.g. `@Amii`). A row is usable when `Link` has an image.
 2. **EDITOR-picked rows come first:** rows with `Post Wearing` / `Post Format` / `P.Link` filled. `P.Link` to a Drive folder = a carousel (all files in it). A file link = single. `SFV …` formats are short videos: skip them and say so (this skill is photo posts). A `P.Link` that says `Sent` or anything that isn't a link: skip and ask the user what it means.
-3. **Exclude scenes already used:** any Run ID already in POSTIZ for that account (any Approval or Status). Never reuse a scene for the same account.
+3. **Exclude scenes already used:** any Run ID already in POSTIZ for that account, whatever its Approval or Status. `Rejected` counts as used: a person turned it down, never propose it again.
 4. Download the candidates (`uc?export=download&id=<file id>`) into a fresh folder.
 
 ## Step 3 — QA (before any person sees an image)
@@ -98,6 +99,14 @@ Send the grid preview image and a short table (date · time · scene · caption)
 - set **Approval → Ready** on the rows they approve; the script schedules them within seconds and writes the Post ID; Status turns Scheduled, then Published at the post time.
 Stop there. Don't follow up unless asked.
 
+## Step 7b — Replacing a Rejected row (when asked)
+A person sets Approval → `Rejected` when a scene shouldn't post. The row stays (history), Grid hides it, the script takes it out of Postiz if it was scheduled. When the user asks for a replacement:
+1. Ask once, in one line, why it was rejected if they didn't say (face, outfit, vibe, repeat). Use the reason when picking.
+2. Pick a new scene for the **same slot** (same date and time) through Steps 2–5, keeping the neighbours rule against the posts around it.
+3. Add it as a **new row** with Approval `Draft`. Never edit or delete the Rejected row.
+4. Send the updated grid preview.
+If they just want the slot gone, do nothing: Grid already moved up.
+
 ## Step 8 — Fixing errors (when asked)
 Read POSTIZ rows where Status = Error and the Error text (N) and Log (Q).
 | Error says | Fix |
@@ -115,11 +124,11 @@ Already-live posts can't be changed from the sheet; edits happen in the IG app.
 - K1 `={"Status"; ARRAYFORMULA(IF(E2:E="", "", IF(L2:L="", J2:J, IF(N2:N<>"", "Error", IF(A2:A+B2:B<=NOW(), "Published", "Scheduled")))))}`
 - M1 `={"Preview"; ARRAYFORMULA(IF(L2:L="", "", "https://platform.postiz.com/p/"&L2:L&"?share=true"))}`
 - O1 `={"Cover"; ARRAYFORMULA(IF(P2:P="", "", REGEXEXTRACT(P2:P, "^[^,]+")))}`
-- J2:J dropdown Draft / Ready. Spreadsheet time zone Asia/Bangkok, recalculation every minute (Status depends on NOW()).
+- J2:J dropdown Draft / Ready / Rejected (Rejected rows: grey, struck through). Spreadsheet time zone Asia/Bangkok, recalculation every minute (Status depends on NOW()).
 
-**Grid** (B1 = account dropdown from `POSTIZ!C2:C`):
-- A2 (cover images, 3 per row, newest first) `=IFERROR(MAP(WRAPROWS(SORT(FILTER(POSTIZ!O2:O, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>""), FILTER(POSTIZ!A2:A+POSTIZ!B2:B, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>""), FALSE), 3, ""), LAMBDA(u, IF(u="", "", IMAGE(u)))), "")`
-- E2 (cards) `=IFERROR(WRAPROWS(SORT(FILTER(TEXT(POSTIZ!A2:A+POSTIZ!B2:B, "d mmm hh:mm")&" · "&POSTIZ!F2:F&CHAR(10)&POSTIZ!H2:H&CHAR(10)&POSTIZ!I2:I&CHAR(10)&POSTIZ!K2:K, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>""), FILTER(POSTIZ!A2:A+POSTIZ!B2:B, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>""), FALSE), 3, ""), "")`
+**Grid** (B1 = account dropdown; Rejected rows are left out):
+- A2 (cover images, 3 per row, newest first) `=IFERROR(MAP(WRAPROWS(SORT(FILTER(POSTIZ!O2:O, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FILTER(POSTIZ!A2:A+POSTIZ!B2:B, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FALSE), 3, ""), LAMBDA(u, IF(u="", "", IMAGE(u)))), "")`
+- E2 (cards) `=IFERROR(WRAPROWS(SORT(FILTER(TEXT(POSTIZ!A2:A+POSTIZ!B2:B, "d mmm hh:mm")&" · "&POSTIZ!F2:F&CHAR(10)&POSTIZ!H2:H&CHAR(10)&POSTIZ!I2:I&CHAR(10)&POSTIZ!K2:K, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FILTER(POSTIZ!A2:A+POSTIZ!B2:B, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FALSE), 3, ""), "")`
 - Sort keys must be numeric (`A+B`); a text sort key makes SORT return #VALUE!.
 
 **Carousel** (B1 = Run ID dropdown from `POSTIZ!E2:E`):
@@ -138,15 +147,17 @@ What it does on every edit of POSTIZ:
 | Change | Result |
 |---|---|
 | Approval → Ready, no Post ID | schedules in Postiz, writes Post ID |
-| Approval → Draft, not live yet | deletes it from Postiz, clears Post ID |
+| Approval → Draft or Rejected, not live yet | deletes it from Postiz, clears Post ID |
 | Date / Time / Account / Caption / Hashtags / Slides edited on a scheduled row | deletes and re-schedules with the new values |
 | Any edit on a row already live | changes nothing in Postiz, sets Approval back to Ready, notes it in Log |
 | Time passed or < 5 min away | refuses, writes Error |
+Deleting a whole row does **not** trigger the script: a scheduled post would still go out. Set it to Rejected instead of deleting.
 Plus: every 30 minutes it writes Postiz failures into Error. Formula and script columns are protected with a warning. Everyone with edit access can approve; the script runs as the installer. Triggers run until the installer loses access or revokes it; Google emails a failure summary if it breaks.
 
 ## Rules
 - Nothing goes to Postiz without a person's Ready or an explicit "post it" in chat.
-- One scene once per account. QA before showing. Drop and say why.
+- One scene once per account (Rejected included). QA before showing. Drop and say why.
+- Never delete POSTIZ rows; Rejected is how a row is removed.
 - Only the input columns of POSTIZ; formulas and script columns stay untouched.
 - Captions: one line, 3 place/moment hashtags, never #sher / #aigenerated.
 - Times at least 1 hour ahead, Bangkok time.
@@ -160,7 +171,7 @@ Plus: every 30 minutes it writes Postiz failures into Error. Formula and script 
 /**
  * POSTIZ tab ↔ Postiz.
  * - Approval → Ready: schedules the row in Postiz, writes the Post ID.
- * - Approval → Draft (post not live yet): removes it from Postiz, clears the Post ID.
+ * - Approval → Draft or Rejected (post not live yet): removes it from Postiz, clears the Post ID.
  * - Edit Date/Time/Account/Caption/Hashtags/Slides on a scheduled row: re-schedules with the new values.
  * - Rows already live are never changed; edits there only get a note in Log.
  * - Every 30 min: writes Postiz failures into Error.

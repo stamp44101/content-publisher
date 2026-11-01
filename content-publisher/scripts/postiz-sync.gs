@@ -1,7 +1,7 @@
 /**
  * POSTIZ tab ↔ Postiz.
  * - Approval → Ready: schedules the row in Postiz, writes the Post ID.
- * - Approval → Draft (post not live yet): removes it from Postiz, clears the Post ID.
+ * - Approval → Draft or Rejected (post not live yet): removes it from Postiz, clears the Post ID.
  * - Edit Date/Time/Account/Caption/Hashtags/Slides on a scheduled row: re-schedules with the new values.
  * - Rows already live are never changed; edits there only get a note in Log.
  * - Every 30 min: writes Postiz failures into Error.
