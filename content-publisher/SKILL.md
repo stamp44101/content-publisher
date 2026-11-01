@@ -85,7 +85,7 @@ Render `grid_preview.py` with all covers newest first, including posts already l
   Check the Postiz names with `integrationList` each run; they win over this table. A new character: ask for one line about her before writing.
 
 ## Step 6 — Write Draft rows
-Append rows below the last used row of POSTIZ. Fill **only** these columns:
+Append new blocks below the last used row of POSTIZ, in time order within the block (replacements are the exception, see 7b). Fill **only** these columns:
 | Col | Field | Value |
 |---|---|---|
 | A | Date | `yyyy-mm-dd` |
@@ -113,10 +113,11 @@ Stop there. Don't follow up unless asked.
 A person sets Approval → `Rejected` when a scene shouldn't post. The row stays (history), Grid hides it, the script takes it out of Postiz if it was scheduled. When the user asks for a replacement:
 1. Ask once, in one line, why it was rejected if they didn't say (face, outfit, vibe, repeat). Use the reason when picking.
 2. Pick a new scene for the **same slot** (same date and time) through Steps 2–5, keeping the neighbours rule against the posts around it.
-3. Add it as a **new row** with Approval `Draft`. Never edit or delete the Rejected row, except its Note.
+3. **Insert a new row directly below the Rejected row** (people read and approve in POSTIZ, so a replacement sits next to what it replaces) with Approval `Draft`. Inserting or moving rows is safe: formulas and the script work per row, never by row number. Never insert above row 2. Never edit or delete the Rejected row, except its Note.
 4. Write both Notes (column R), so readers understand without asking:
-   - Rejected row: `Rejected (<who>): <reason>. Replaced by <Run ID>, row <n>.`
-   - New row: `Replaces <Run ID> (row <n>, rejected: <reason>). <Why this scene fits the slot: same city/time, contrast with neighbours, what it fixes>.`
+   - Rejected row: `Rejected (<who>): <reason>. Replaced by <Run ID> (row below).`
+   - New row: `Replaces <Run ID> (row above, rejected: <reason>). <Why this scene fits the slot: same city/time, contrast with neighbours, what it fixes>.`
+   Refer to Run IDs or "row above/below", never row numbers: they change when rows move.
 5. Send the updated grid preview.
 If they just want the slot gone, do nothing: Grid already moved up.
 
@@ -137,7 +138,7 @@ Already-live posts can't be changed from the sheet; edits happen in the IG app.
 - K1 `={"Status"; ARRAYFORMULA(IF(E2:E="", "", IF(L2:L="", J2:J, IF(N2:N<>"", "Error", IF(A2:A+B2:B<=NOW(), "Published", "Scheduled")))))}`
 - M1 `={"Preview"; ARRAYFORMULA(IF(L2:L="", "", "https://platform.postiz.com/p/"&L2:L&"?share=true"))}`
 - O1 `={"Cover"; ARRAYFORMULA(IF(P2:P="", "", REGEXEXTRACT(P2:P, "^[^,]+")))}`
-- Filter views for people (Data → Filter views): one per account, **filter only, no sort**. A sorted view breaks the spilled formula columns in that view (#REF!, blank Status). They change only what the viewer sees; rows are never moved. New rows are always appended at the bottom; Grid shows true time order. Navigation lives on Grid row 1 (frozen): B1 account dropdown · C1 `▸ open <account> rows in POSTIZ` (`HYPERLINK("#gid=0&fvid="&SWITCH(B1, …))`) · E1 `▸ POSTIZ: all rows` (an "all" filter view with no criteria; a plain `#gid=0` link does not leave a filter view) · F1 `▸ Carousel viewer`. Keep POSTIZ free of buttons. If a filter view is recreated its id changes: update those links. A new account needs a filter view (filter only) and a case in the C1 SWITCH.
+- Filter views for people (Data → Filter views): one per account, **filter only, no sort**. A sorted view breaks the spilled formula columns in that view (#REF!, blank Status). They change only what the viewer sees; rows are never moved. New blocks are appended at the bottom; replacements are inserted under the row they replace, so each account reads in time order in its view. Navigation lives on Grid row 1 (frozen): B1 account dropdown · C1 `▸ open <account> rows in POSTIZ` (`HYPERLINK("#gid=0&fvid="&SWITCH(B1, …))`) · E1 `▸ POSTIZ: all rows` (an "all" filter view with no criteria; a plain `#gid=0` link does not leave a filter view) · F1 `▸ Carousel viewer`. Keep POSTIZ free of buttons. If a filter view is recreated its id changes: update those links. A new account needs a filter view (filter only) and a case in the C1 SWITCH.
 - J2:J dropdown Draft / Ready / Rejected (Rejected rows: grey, struck through). Spreadsheet time zone Asia/Bangkok, recalculation every minute (Status depends on NOW()).
 
 **Grid** (B1 = account dropdown; Rejected rows are left out):
