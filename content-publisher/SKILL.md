@@ -179,6 +179,7 @@ Plus: every 30 minutes it writes Postiz failures into Error. Formula and script 
 - Captions: one line, 3 place/moment hashtags, never #sher / #aigenerated.
 - Times at least 1 hour ahead, Bangkok time.
 - Photo posts only; videos (SFV) are out of scope.
+- Before telling anyone what is still Draft, waiting, scheduled or live, read POSTIZ (and Postiz if it matters) again in that same turn. People change Approval while you work; an earlier read is stale.
 - Keep replies short: the grid image first, a table second.
 
 ## Appendix — scripts (write these if `scripts/` is missing)
