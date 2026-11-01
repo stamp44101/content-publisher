@@ -124,6 +124,7 @@ Already-live posts can't be changed from the sheet; edits happen in the IG app.
 - K1 `={"Status"; ARRAYFORMULA(IF(E2:E="", "", IF(L2:L="", J2:J, IF(N2:N<>"", "Error", IF(A2:A+B2:B<=NOW(), "Published", "Scheduled")))))}`
 - M1 `={"Preview"; ARRAYFORMULA(IF(L2:L="", "", "https://platform.postiz.com/p/"&L2:L&"?share=true"))}`
 - O1 `={"Cover"; ARRAYFORMULA(IF(P2:P="", "", REGEXEXTRACT(P2:P, "^[^,]+")))}`
+- Filter views for people (Data → Filter views): "All · by account & time", one per account sorted by date/time. They change only what the viewer sees; rows are never moved. New rows are always appended at the bottom.
 - J2:J dropdown Draft / Ready / Rejected (Rejected rows: grey, struck through). Spreadsheet time zone Asia/Bangkok, recalculation every minute (Status depends on NOW()).
 
 **Grid** (B1 = account dropdown; Rejected rows are left out):
