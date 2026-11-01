@@ -31,8 +31,9 @@ The approval click is the human checkpoint. Claude prepares, people decide, the 
 1. **Google Sheets + Drive connectors.** Needed to read DIRECTOR / POSTIZ and list Drive folders. Missing → tell the user to connect them (Settings → Connectors) and stop.
 2. **The sheet.** "SHER Content Plan – TEST", id `1Nm6SlnYxADAhz7KFNeiTh60WWHM9AfkSx_5iu417UYk` (use another id only if the user gives one). Tabs used: DIRECTOR (source), POSTIZ (plan + status), Grid (feed preview), Carousel (slide viewer).
 3. **Postiz connector (optional).** Used to upload images (`uploadFromUrlTool`) and to list channels (`integrationList`). Without it, use the Drive fallback for Slides (Step 6) and say so.
-4. **Apps Script installed?** Check that POSTIZ has a `Log` column (Q) with entries. If not, the user hasn't installed it: give the install steps in "Apps Script" below before anything is set to Ready.
-5. **Sandbox network.** You must download images for QA. Test one Drive download (`https://drive.google.com/uc?export=download&id=<id>`). Blocked → ask the user to set network access to All domains; until then do QA from thumbnails only and say so.
+4. **Apps Script installed?** On the SHER Content Plan – TEST sheet it is: Stamp installed it on 1 Nov 2026 with his Postiz key. Never ask anyone to install a second copy there (every post would be scheduled twice). On any other sheet, check that POSTIZ has a `Log` column (Q) with entries; if not, give the install steps in "Apps Script" below before anything is set to Ready.
+5. **Postiz channel exists?** Every account you plan for must exist in Postiz under the same name (`integrationList`). Missing → plan the Draft rows anyway, and tell the user the channel must be connected in Postiz before anyone sets Ready (otherwise those rows go to Error).
+6. **Sandbox network.** You must download images for QA. Test one Drive download (`https://drive.google.com/uc?export=download&id=<id>`). Blocked → ask the user to set network access to All domains; until then do QA from thumbnails only and say so.
 
 ## Step 1 — Intake
 Defaults if the user doesn't say: **next 9 posts** (one full grid) for the account they name, **3 posts a day**, starting the next day.

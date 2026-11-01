@@ -25,6 +25,16 @@ DIRECTOR (ready scenes) ──Claude──▶ POSTIZ tab: Draft rows (QA'd image
 2. Set Claude's network access to **All domains** (it downloads images from Drive to check them).
 3. Once per sheet, whoever owns the Postiz key installs the Apps Script (`content-publisher/scripts/postiz-sync.gs`): Extensions → Apps Script → paste → Script Properties `POSTIZ_API_KEY` → run `setup`. Steps are also in `SKILL.md`.
 
+## Current install (live)
+| Sheet | Apps Script | Installed by | Postiz key | Since |
+|---|---|---|---|---|
+| SHER Content Plan – TEST (`1Nm6SlnYxADAhz7KFNeiTh60WWHM9AfkSx_5iu417UYk`) | `Postiz Trigger` (Extensions → Apps Script) | Stamp | Stamp's Postiz account | 1 Nov 2026 |
+
+- Already installed: **don't install it again** on this sheet; a second copy would schedule every post twice.
+- The triggers run as Stamp. They stop if Stamp loses edit access to the sheet or revokes the script; failure emails go to Stamp.
+- To update the code: Stamp pastes the new `postiz-sync.gs` over the old one and runs `setup` again (it replaces the old triggers).
+- Postiz channels connected: `amii` (Instagram). Rows for any other account show Error until that channel is connected in Postiz under the same name.
+
 ## Use
 Say what you need in plain words, e.g. "plan the next 9 posts for Amii", "fill Hanna's grid for next week", "fix the Error rows".
 You get: a grid preview image and a table. Then open the sheet, check **Grid** and **Carousel**, and set **Approval → Ready** on what you approve.
