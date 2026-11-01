@@ -93,14 +93,13 @@ Append new blocks below the last used row of POSTIZ, in time order within the bl
 | C | Account | Postiz channel name, exactly (`integrationList`), e.g. `amii` |
 | D | Channel | `Instagram` |
 | E | Run ID | from DIRECTOR, e.g. `Run2-002` |
-| G | Image URLs | the source: Drive file or folder link from DIRECTOR |
 | H | Caption | Step 5 |
 | I | Hashtags | Step 5 |
 | J | Approval | `Draft` |
 | P | Slides | public image URLs, comma-separated, in slide order |
 | R | Note | optional: anything a reader should know about this pick |
 **Slides:** upload each image with Postiz `uploadFromUrlTool` (url = the Drive `uc?export=download&id=` link) and use the returned `uploads.postiz.com` paths. Fallback without Postiz: the Drive `uc?export=download&id=` links themselves (the script uploads them at schedule time; the Grid image may stay blank).
-**Never write** F, K, L, M, N, O, Q (formulas and script-owned). Never edit a row that already has a Post ID (L) unless the user asks. Never set Approval to Ready yourself.
+**Never write** F, G, K, L, M, N, O, Q (formulas and script-owned). The source image link is not copied: it stays in DIRECTOR under the Run ID. Never edit a row that already has a Post ID (L) unless the user asks. Never set Approval to Ready yourself.
 
 ## Step 7 — Hand-off
 Send the grid preview image and a short table (date · time · scene · caption). Then tell the user, in 2–3 lines:
@@ -134,6 +133,7 @@ Already-live posts can't be changed from the sheet; edits happen in the IG app.
 
 ## The sheet (reference — rebuild with exactly these if something breaks)
 **POSTIZ** (row 1 = headers; formula cells live in row 1 and spill down):
+- G1 `={"Image"; ARRAYFORMULA(IF(O2:O="", "", IMAGE(O2:O)))}` (cover preview; column 90 px wide, rows 120 px high)
 - F1 `={"Format"; ARRAYFORMULA(IF(P2:P="", "", IF(REGEXMATCH(P2:P, ","), "Carousel ("&(LEN(P2:P)-LEN(SUBSTITUTE(P2:P, ",", ""))+1)&")", "Single")))}`
 - K1 `={"Status"; ARRAYFORMULA(IF(E2:E="", "", IF(L2:L="", J2:J, IF(N2:N<>"", "Error", IF(A2:A+B2:B<=NOW(), "Published", "Scheduled")))))}`
 - M1 `={"Preview"; ARRAYFORMULA(IF(L2:L="", "", "https://platform.postiz.com/p/"&L2:L&"?share=true"))}`
