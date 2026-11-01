@@ -30,8 +30,11 @@ DIRECTOR (ready scenes) ──Claude──▶ POSTIZ tab: Draft rows (QA'd image
 |---|---|---|---|---|
 | SHER Content Plan – TEST (`1Nm6SlnYxADAhz7KFNeiTh60WWHM9AfkSx_5iu417UYk`) | `Postiz Trigger` (Extensions → Apps Script) | Stamp | Stamp's Postiz account | 1 Nov 2026 |
 
+Installed version: the one in this repo as of 2 Nov 2026 00:29 (Ready/Draft/Rejected handling, re-scheduling on edit, Log, and the 15-minute sync that writes errors and live Instagram links). Confirmed working: live links arrived in IG Link after the first sync.
+
 - Already installed: **don't install it again** on this sheet; a second copy would schedule every post twice.
 - The triggers run as Stamp. They stop if Stamp loses edit access to the sheet or revokes the script; failure emails go to Stamp.
+- Cost: none. A sync is a few seconds every 15 minutes (≈5–8 min/day of the 90 min/day Apps Script allows a Gmail account) and one web call (≈100/day of 20,000). Postiz limits creating posts to 100 per hour; approving more than that in one hour sends the extra rows to Error, set them Ready again an hour later.
 - To update the code: Stamp pastes the new `postiz-sync.gs` over the old one and runs `setup` again (it replaces the old triggers).
 - Postiz channels connected (checked 1 Nov 2026): `amii`, `hanna_ubabe`, `kristy` (all Instagram). Claire is not connected yet. The Account column must match these names exactly; the skill checks `integrationList` each run.
 
