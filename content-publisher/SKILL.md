@@ -97,7 +97,7 @@ Append new blocks below the last used row of POSTIZ, in time order within the bl
 | I | Hashtags | Step 5 |
 | J | Approval | `Draft` |
 | P | Slides | public image URLs, comma-separated, in slide order |
-| R | Note | optional: anything a reader should know about this pick |
+| R | Note | optional: anything a reader should know about this pick, starting with who wrote it (see Notes below) |
 **Slides (P) is the single source of carousel order.** The order of the URLs in P is the order everywhere: the script sends them to Postiz in that order (so Instagram shows them in that order), the first URL becomes Cover (O, hidden) and therefore the Image column and the Grid tile, Format counts them, and the Carousel tab shows them left to right. To reorder a carousel, reorder the URLs in P and nothing else (on a scheduled row: Draft, reorder, Ready). Strongest frame first, detail frames last (Step 4).
 **Slides:** upload each image with Postiz `uploadFromUrlTool` (url = the Drive `uc?export=download&id=` link) and use the returned `uploads.postiz.com` paths. Fallback without Postiz: the Drive `uc?export=download&id=` links themselves (the script uploads them at schedule time; the Grid image may stay blank).
 **Never write** F, G, K, L, M, N, O, Q, S (formulas and script-owned). The source image link is not copied: it stays in DIRECTOR under the Run ID. Never edit a row that already has a Post ID (L) unless the user asks. Never set Approval to Ready yourself.
@@ -115,8 +115,8 @@ A person sets Approval → `Rejected` when a scene shouldn't post. The row stays
 2. Pick a new scene for the **same slot** (same date and time) through Steps 2–5, keeping the neighbours rule against the posts around it.
 3. **Insert a new row directly below the Rejected row** (people read and approve in POSTIZ, so a replacement sits next to what it replaces) with Approval `Draft`. Inserting or moving rows is safe: formulas and the script work per row, never by row number. Never insert above row 2. Never edit or delete the Rejected row, except its Note.
 4. Write both Notes (column R), so readers understand without asking:
-   - Rejected row: `Rejected (<who>): <reason>. Replaced by <Run ID> (row below).`
-   - New row: `Replaces <Run ID> (row above, rejected: <reason>). <Why this scene fits the slot: same city/time, contrast with neighbours, what it fixes>.`
+   - Rejected row: `[Claude · asked by <who>] Rejected by <who>: <reason>. Replaced by <Run ID> (row below).`
+   - New row: `[Claude · asked by <who>] Replaces <Run ID> (row above, rejected: <reason>). <Why this scene fits the slot: same city/time, contrast with neighbours, what it fixes>.`
    Refer to Run IDs or "row above/below", never row numbers: they change when rows move.
 5. Send the updated grid preview.
 If they just want the slot gone, do nothing: Grid already moved up.
@@ -155,7 +155,10 @@ Already-live posts can't be changed from the sheet; edits happen in the IG app.
 - A3 `=IFERROR(MAP(SPLIT(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!P2:P), ","), LAMBDA(u, IMAGE(u))), "")`
 - C1 (Instagram link once live, else Postiz preview) `=IFERROR(IF(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!S2:S)<>"", HYPERLINK(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!S2:S), "Open on Instagram ↗"), IF(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!M2:M)="", "(not in Postiz yet)", HYPERLINK(XLOOKUP($B$1, POSTIZ!E2:E, POSTIZ!M2:M), "Open in Postiz ↗"))), "")`
 
-Never type into Grid or Carousel output cells: one formula fills each block, typing over it breaks it (#REF!). Column R (Note) is free text for people and Claude; the script never writes it. Column S (IG Link) is written by the script once a post is live. If you add columns to POSTIZ, add them to the right of S; inserting in the middle shifts the script's column map (`C` in `postiz-sync.gs`).
+Never type into Grid or Carousel output cells: one formula fills each block, typing over it breaks it (#REF!). Column R (Note) is free text for people and Claude; the script never writes it. **Every note starts with who wrote it, in square brackets**, so readers can tell a person's note from Claude's:
+- a person: `[Stamp] keep this one for Friday`
+- Claude on its own: `[Claude] …`; Claude doing what someone asked: `[Claude · asked by Stamp] …` (same wording as Log)
+Adding to a note someone else wrote: keep theirs, add yours after it on a new line with your own tag. Never remove or rewrite another person's note. Column S (IG Link) is written by the script once a post is live. If you add columns to POSTIZ, add them to the right of S; inserting in the middle shifts the script's column map (`C` in `postiz-sync.gs`).
 
 ## Apps Script (`scripts/postiz-sync.gs`)
 Install once per sheet, by the person whose Postiz key it uses:
@@ -170,7 +173,7 @@ What it does on every edit of POSTIZ:
 | Date / Time / Account / Caption / Hashtags / Slides edited on a scheduled row | deletes and re-schedules with the new values |
 | Any edit on a row already live | changes nothing in Postiz, sets Approval back to Ready, notes it in Log |
 | Time passed or < 5 min away | refuses, writes Error |
-**Edits made through the Sheets API do not fire the script** (installable onEdit only runs for edits made in the Sheets UI). When the user asks you to change a scheduled row yourself: delete the old post in Postiz (`deletePostTool`), schedule the new one (`integrationSchedulePostTool`, same caption, hashtags and Slides, time converted to UTC), then write the new Post ID to L, the new Date/Time to A/B, and a line to Log (Q) like `<d MMM HH:mm> · Claude (asked by <who>) · rescheduled`, plus the reason in Note. Verify with `postsListTool` afterwards.
+**Edits made through the Sheets API do not fire the script** (installable onEdit only runs for edits made in the Sheets UI). When the user asks you to change a scheduled row yourself: delete the old post in Postiz (`deletePostTool`), schedule the new one (`integrationSchedulePostTool`, same caption, hashtags and Slides, time converted to UTC), then write the new Post ID to L, the new Date/Time to A/B, and a line to Log (Q) like `<d MMM HH:mm> · Claude (asked by <who>) · rescheduled`, plus the reason in Note (`[Claude · asked by <who>] Moved … (was <old date time>).`). Leave Approval as it is: flipping Draft→Ready yourself would be approving on the person's behalf. Verify with `postsListTool` afterwards.
 **House rule for changing a scheduled row:** set Approval → Draft, make all the edits, check them, then set Ready once. Editing a scheduled row directly re-schedules on every cell edit, so half-finished values can be scheduled in between. A single small time shift on the same day may be edited directly. Tell people this rule whenever they ask how to change a post.
 Deleting a whole row does **not** trigger the script: a scheduled post would still go out. Set it to Rejected instead of deleting.
 Plus: every 15 minutes it syncs from Postiz: failures into Error, and the live Instagram link into IG Link (S), which Grid and Carousel turn into clickable links. Formula and script columns are protected with a warning. Everyone with edit access can approve; the script runs as the installer. Triggers run until the installer loses access or revokes it; Google emails a failure summary if it breaks.
