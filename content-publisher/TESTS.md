@@ -46,6 +46,12 @@ Use a copy of the SHER Content Plan sheet if you don't want rows added to the re
 **Setup:** a sheet copy without the script (no Log column)
 - [ ] Gives the 3 install steps before telling anyone to set Ready
 
+## T9 — Claude reschedules
+**Setup:** 6 Ready/Scheduled rows for one account over two days; today has no posts for it. **Prompt:** "move kristy up a day like I did for hanna"
+- [ ] Changes Date/Time in the sheet first; Approval stays Ready (never flips Draft→Ready itself)
+- [ ] Creates the new posts in Postiz, deletes the old ones, writes new Post IDs, Log and a Note starting `[Claude · asked by …]`
+- [ ] Re-reads sheet and Postiz before reporting; no duplicates left
+
 ---
 
 ### Scoring

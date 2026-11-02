@@ -43,6 +43,8 @@ Defaults if the user doesn't say: **next 9 posts** (one full grid) for the accou
 | Account (Postiz channel name, e.g. `amii`) | none, ask |
 | How many posts / which dates | 9 posts, 3 per day from tomorrow |
 | Times (Bangkok) | 3 slots a day, staggered by account so two accounts never post at the same minute: amii 09:00 · 14:00 · 19:00–21:00, hanna_ubabe 10:00 · 15:00 · 20:00, kristy 11:00 · 16:00 · 21:00. A new account takes the next free hour. |
+**No gap days:** every account posts every day until its grid is done. If posts are pulled out of a day (moved to launch night, rejected without replacement), move the rest of that account's plan up a day rather than leaving the day empty, and keep all accounts finishing on the same day.
+
 Never plan a time less than 1 hour from now: the script refuses anything under 5 minutes, and people need time to approve.
 
 ## Step 2 — Scene pool
