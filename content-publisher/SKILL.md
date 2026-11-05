@@ -1,6 +1,6 @@
 ---
 name: content-publisher
-description: Plan and publish photo posts for SHER's AI KOL Instagram accounts through the SHER Content Plan sheet and Postiz. Picks ready scenes from DIRECTOR, QAs them, writes Draft rows with captions in the POSTIZ tab; the team approves with Ready and the sheet's Apps Script schedules them. Use for "plan posts", "fill the grid", "next 9 for Amii", "plan the month" and fixing rows that show Error.
+description: Plan and publish photo posts and SFV reels for SHER's AI KOL Instagram accounts through the SHER Content Plan sheet and Postiz. Picks ready scenes from DIRECTOR, QAs them, writes Draft rows with captions in the POSTIZ tab; the team approves with Ready and the sheet's Apps Script schedules them. Use for "plan posts", "fill the grid", "next 9 for Amii", "plan the month" and fixing rows that show Error.
 ---
 
 # Content Publisher
@@ -49,7 +49,7 @@ Never plan a time less than 1 hour from now: the script refuses anything under 5
 
 ## Step 2 — Scene pool
 1. Read DIRECTOR for the account's character (`Character` column, e.g. `@Amii`). A row is usable when `Link` has an image.
-2. **EDITOR-picked rows come first:** rows with `Post Wearing` / `Post Format` / `P.Link` filled. `P.Link` to a Drive folder = a carousel (all files in it). A file link = single. `SFV …` formats are short videos: skip them and say so (this skill is photo posts). A `P.Link` that says `Sent` or anything that isn't a link: skip and ask the user what it means.
+2. **EDITOR-picked rows come first:** rows with `Post Wearing` / `Post Format` / `P.Link` filled. `P.Link` to a Drive folder = a carousel (all files in it). A file link = single. `SFV …` formats are reels: a `P.Link` to an mp4/mov file = one Reel post (see Reels below). A `P.Link` that says `Sent` or anything that isn't a link: skip and ask the user what it means.
 3. **Exclude scenes already used:** any Run ID already in POSTIZ for that account, whatever its Approval or Status. `Rejected` counts as used: a person turned it down, never propose it again.
 4. Download the candidates (`uc?export=download&id=<file id>`) into a fresh folder.
 
@@ -98,10 +98,18 @@ Append new blocks below the last used row of POSTIZ, in time order within the bl
 | H | Caption | Step 5 |
 | I | Hashtags | Step 5 |
 | J | Approval | `Draft` |
-| P | Slides | public image URLs, comma-separated, in slide order |
+| P | Slides | public image URLs, comma-separated, in slide order; for a Reel, the one video URL |
 | R | Note | optional: anything a reader should know about this pick, starting with who wrote it (see Notes below) |
+| T | Reel Cover | Reels only: a still image URL for the sheet preview (Image column, Grid). Sheet-only; IG uses the first frame |
 **Slides (P) is the single source of carousel order.** The order of the URLs in P is the order everywhere: the script sends them to Postiz in that order (so Instagram shows them in that order), the first URL becomes Cover (O, hidden) and therefore the Image column and the Grid tile, Format counts them, and the Carousel tab shows them left to right. To reorder a carousel, reorder the URLs in P and nothing else (on a scheduled row: Draft, reorder, Ready). Strongest frame first, detail frames last (Step 4).
 **Slides:** upload each image with Postiz `uploadFromUrlTool` (url = the Drive `uc?export=download&id=` link) and use the returned `uploads.postiz.com` paths. Fallback without Postiz: the Drive `uc?export=download&id=` links themselves (the script uploads them at schedule time; the Grid image may stay blank).
+**Reels (SFV):**
+- QA the clip before planning: duration, resolution (expect 1080×1920; flag anything lower, it looks soft on IG), a frame every ~3 s on one contact board, plus the usual face / garment / hands / text checks.
+- Upload the mp4 with `uploadFromUrlTool` and `adjust: true` (H.264/AAC, short side 1080); wait for `mediaStatusTool` = ready; put that one path in P.
+- Cover for T: use `RunX-XXX_cover.jpg` if the EDITOR left one next to the mp4 in Drive; otherwise take a frame from the hook shot (ffmpeg, ~0.5 s), host it at a public URL (e.g. Higgsfield `media_upload` → cloudfront URL), upload that to Postiz, and write the path to T.
+- No script change is needed: Instagram `post_type: post` with a single video publishes as a Reel.
+- Feed: IG crops a reel tile to the centre of the grid; keep the subject centred in the opening frame.
+
 **Never write** F, G, K, L, M, N, O, Q, S (formulas and script-owned). The source image link is not copied: it stays in DIRECTOR under the Run ID. Never edit a row that already has a Post ID (L) unless the user asks. Never set Approval to Ready yourself.
 
 ## Step 7 — Hand-off
@@ -137,11 +145,11 @@ Already-live posts can't be changed from the sheet; edits happen in the IG app.
 ## The sheet (reference — rebuild with exactly these if something breaks)
 **POSTIZ** (row 1 = headers; formula cells live in row 1 and spill down):
 - G1 `={"Image"; ARRAYFORMULA(IF(O2:O="", "", IMAGE(O2:O)))}` (cover preview; column 90 px wide, rows 120 px high)
-- F1 `={"Format"; ARRAYFORMULA(IF(P2:P="", "", IF(REGEXMATCH(P2:P, ","), "Carousel ("&(LEN(P2:P)-LEN(SUBSTITUTE(P2:P, ",", ""))+1)&")", "Single")))}`
+- F1 `={"Format"; ARRAYFORMULA(IF(P2:P="", "", IF(REGEXMATCH(P2:P, "(?i)\.(mp4|mov)"), "Reel", IF(REGEXMATCH(P2:P, ","), "Carousel ("&(LEN(P2:P)-LEN(SUBSTITUTE(P2:P, ",", ""))+1)&")", "Single"))))}`
 - K1 `={"Status"; ARRAYFORMULA(IF(E2:E="", "", IF(L2:L="", J2:J, IF(N2:N<>"", "Error", IF(A2:A+B2:B<=NOW(), "Published", "Scheduled")))))}`
 - M1 `={"Preview"; ARRAYFORMULA(IF(L2:L="", "", "https://platform.postiz.com/p/"&L2:L&"?share=true"))}`
 - O (Cover) is a hidden helper: Grid and the Image column read it. Keep it hidden, never delete it (deleting shifts P/Q and breaks the script's column map).
-- O1 `={"Cover"; ARRAYFORMULA(IF(P2:P="", "", REGEXEXTRACT(P2:P, "^[^,]+")))}`
+- O1 `={"Cover"; ARRAYFORMULA(IF(P2:P="", "", IF(T2:T<>"", T2:T, REGEXEXTRACT(P2:P, "^[^,]+"))))}` (T = Reel Cover, a typed column right of IG Link)
 - Filter views for people (Data → Filter views): one per account, **filter only, no sort**. A sorted view breaks the spilled formula columns in that view (#REF!, blank Status). They change only what the viewer sees; rows are never moved. New blocks are appended at the bottom; replacements are inserted under the row they replace, so each account reads in time order in its view. Navigation lives on Grid row 1 (frozen): B1 account dropdown · C1 `▸ open <account> rows in POSTIZ` (`HYPERLINK("#gid=0&fvid="&SWITCH(B1, …))`) · E1 `▸ POSTIZ: all rows` (an "all" filter view with no criteria; a plain `#gid=0` link does not leave a filter view) · F1 `▸ Carousel viewer`. Keep POSTIZ free of buttons. If a filter view is recreated its id changes: update those links. A new account needs a filter view (filter only) and a case in the C1 SWITCH.
 - J2:J dropdown Draft / Ready / Rejected (Rejected rows: grey, struck through). Spreadsheet time zone Asia/Bangkok, recalculation every minute (Status depends on NOW()).
 
@@ -187,7 +195,7 @@ Plus: every 15 minutes it syncs from Postiz: failures into Error, and the live I
 - Only the input columns of POSTIZ; formulas and script columns stay untouched.
 - Captions: one line, 3 place/moment hashtags, never #sher / #aigenerated.
 - Times at least 1 hour ahead, Bangkok time.
-- Photo posts only; videos (SFV) are out of scope.
+- Photo posts and SFV reels (one video per post); no stories.
 - Before telling anyone what is still Draft, waiting, scheduled or live, read POSTIZ (and Postiz if it matters) again in that same turn. People change Approval while you work; an earlier read is stale.
 - Keep replies short: the grid image first, a table second.
 

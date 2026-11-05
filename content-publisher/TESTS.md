@@ -8,7 +8,7 @@ Use a copy of the SHER Content Plan sheet if you don't want rows added to the re
 ## T1 — Happy path: one grid
 **Prompt:** `วางแผน 9 โพสต์ถัดไปให้ Kristy`
 - [ ] Reads DIRECTOR rows for @Kristy with a Link; EDITOR-picked rows considered first
-- [ ] Skips the SFV - OOTD row and says it is a video
+- [ ] Plans the SFV - OOTD row as a Reel: mp4 in Slides, cover in T, Format shows Reel, resolution flagged if under 1080×1920
 - [ ] Sends a contact sheet or names dropped images with a reason (face, hands, text, repeat)
 - [ ] Sends a 3×3 grid preview, newest top-left
 - [ ] Captions: one line each, 3 place/moment hashtags, no #sher / #aigenerated
