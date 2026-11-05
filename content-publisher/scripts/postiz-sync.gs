@@ -87,6 +87,8 @@ function syncFromPostiz() {
     if (p.state === 'ERROR') sh.getRange(row, C.error).setValue(p.error || 'Postiz reported an error');
     if (p.state === 'PUBLISHED' && p.releaseURL && sh.getRange(row, C.igLink).getValue() !== p.releaseURL)
       sh.getRange(row, C.igLink).setValue(p.releaseURL);
+    if (p.state === 'PUBLISHED' && p.releaseURL && sh.getRange(row, C.error).getValue() !== '')
+      sh.getRange(row, C.error).setValue('');   // a retry went through: clear the old error
   });
 }
 
@@ -96,7 +98,8 @@ function handleRow_(sh, row, touchedApproval, touchedContent, who) {
   const rowData = readRow_(sh, row);
   const log = msg => sh.getRange(row, C.log).setValue(stamp_() + ' · ' + who + ' · ' + msg);
   const err = msg => { sh.getRange(row, C.error).setValue(msg); log('error: ' + msg); };
-  const live = rowData.postId && rowData.when && rowData.when.getTime() <= Date.now();
+  // A failed post (Error set, no IG link) is not live: Draft removes it, Ready re-schedules it.
+  const live = rowData.postId && rowData.when && rowData.when.getTime() <= Date.now() && (!rowData.error || rowData.igLink);
 
   try {
     if (live) {                                            // already published: never touch Postiz
@@ -150,7 +153,7 @@ function schedule_(sh, row, d, err, log, label) {
 }
 
 function readRow_(sh, row) {
-  const v = sh.getRange(row, 1, 1, C.slides).getValues()[0];
+  const v = sh.getRange(row, 1, 1, C.igLink).getValues()[0];
   const disp = sh.getRange(row, 1, 1, C.slides).getDisplayValues()[0];
   let when = null;
   try {
@@ -162,6 +165,7 @@ function readRow_(sh, row) {
     postId: String(v[C.postId - 1]).trim(),
     account: String(v[C.account - 1]).trim(),
     caption: v[C.caption - 1], hashtags: v[C.hashtags - 1],
+    error: String(v[C.error - 1]).trim(), igLink: String(v[C.igLink - 1]).trim(),
     slides: String(v[C.slides - 1]).split(',').map(s => s.trim()).filter(Boolean),
     when: when
   };

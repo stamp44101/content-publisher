@@ -133,6 +133,7 @@ If they just want the slot gone, do nothing: Grid already moved up.
 
 ## Step 8 — Fixing errors (when asked)
 Read POSTIZ rows where Status = Error and the Error text (N) and Log (Q).
+Grid hides a failed row (Error and no IG Link) so the preview matches the real profile. Retry in the sheet: Draft → new Date/Time → Ready. If someone retried by hand in Postiz instead, read the real publish time from the IG link (shortcode → media id; `(id >> 23) + 1314220021721` = Unix ms) and write it to Date/Time with a Note, so Grid sorts like IG.
 | Error says | Fix |
 |---|---|
 | Time has passed or is too close | Ask for a new time, write A/B; user sets Ready again |
@@ -146,7 +147,7 @@ Already-live posts can't be changed from the sheet; edits happen in the IG app.
 **POSTIZ** (row 1 = headers; formula cells live in row 1 and spill down):
 - G1 `={"Image"; ARRAYFORMULA(IF(O2:O="", "", IMAGE(O2:O)))}` (cover preview; column 90 px wide, rows 120 px high)
 - F1 `={"Format"; ARRAYFORMULA(IF(P2:P="", "", IF(REGEXMATCH(P2:P, "(?i)\.(mp4|mov)"), "Reel", IF(REGEXMATCH(P2:P, ","), "Carousel ("&(LEN(P2:P)-LEN(SUBSTITUTE(P2:P, ",", ""))+1)&")", "Single"))))}`
-- K1 `={"Status"; ARRAYFORMULA(IF(E2:E="", "", IF(L2:L="", J2:J, IF(N2:N<>"", "Error", IF(A2:A+B2:B<=NOW(), "Published", "Scheduled")))))}`
+- K1 `={"Status"; ARRAYFORMULA(IF(E2:E="", "", IF(S2:S<>"", "Published", IF(L2:L="", J2:J, IF(N2:N<>"", "Error", IF(A2:A+B2:B<=NOW(), "Published", "Scheduled"))))))}` (an IG Link means live, whatever Error says)
 - M1 `={"Preview"; ARRAYFORMULA(IF(L2:L="", "", "https://platform.postiz.com/p/"&L2:L&"?share=true"))}`
 - O (Cover) is a hidden helper: Grid and the Image column read it. Keep it hidden, never delete it (deleting shifts P/Q and breaks the script's column map).
 - O1 `={"Cover"; ARRAYFORMULA(IF(P2:P="", "", IF(T2:T<>"", T2:T, REGEXEXTRACT(P2:P, "^[^,]+"))))}` (T = Reel Cover, a typed column right of IG Link)
@@ -154,8 +155,8 @@ Already-live posts can't be changed from the sheet; edits happen in the IG app.
 - J2:J dropdown Draft / Ready / Rejected (Rejected rows: grey, struck through). Spreadsheet time zone Asia/Bangkok, recalculation every minute (Status depends on NOW()).
 
 **Grid** (B1 = account dropdown; Rejected rows are left out):
-- A2 (cover images, 3 per row, newest first) `=IFERROR(MAP(WRAPROWS(SORT(FILTER(POSTIZ!O2:O, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FILTER(POSTIZ!A2:A+POSTIZ!B2:B, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FALSE), 3, ""), LAMBDA(u, IF(u="", "", IMAGE(u)))), "")`
-- E2 (cards; a live post's card is a link to it on Instagram, from S) `=IFERROR(MAP(WRAPROWS(SORT(FILTER(ROW(POSTIZ!A2:A), POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FILTER(POSTIZ!A2:A+POSTIZ!B2:B, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected"), FALSE), 3, ""), LAMBDA(r, IF(r="", "", LET(t, TEXT(INDEX(POSTIZ!A:A, r)+INDEX(POSTIZ!B:B, r), "d mmm hh:mm")&" · "&INDEX(POSTIZ!F:F, r)&CHAR(10)&INDEX(POSTIZ!H:H, r)&CHAR(10)&INDEX(POSTIZ!I:I, r)&CHAR(10)&INDEX(POSTIZ!K:K, r), u, INDEX(POSTIZ!S:S, r), IF(u="", t, HYPERLINK(u, t&CHAR(10)&"▸ open on Instagram")))))), "")`
+- A2 (cover images, 3 per row, newest first) `=IFERROR(MAP(WRAPROWS(SORT(FILTER(POSTIZ!O2:O, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected", (POSTIZ!N2:N="")+(POSTIZ!S2:S<>"")), FILTER(POSTIZ!A2:A+POSTIZ!B2:B, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected", (POSTIZ!N2:N="")+(POSTIZ!S2:S<>"")), FALSE), 3, ""), LAMBDA(u, IF(u="", "", IMAGE(u)))), "")`
+- E2 (cards; a live post's card is a link to it on Instagram, from S) `=IFERROR(MAP(WRAPROWS(SORT(FILTER(ROW(POSTIZ!A2:A), POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected", (POSTIZ!N2:N="")+(POSTIZ!S2:S<>"")), FILTER(POSTIZ!A2:A+POSTIZ!B2:B, POSTIZ!C2:C=$B$1, POSTIZ!O2:O<>"", POSTIZ!J2:J<>"Rejected", (POSTIZ!N2:N="")+(POSTIZ!S2:S<>"")), FALSE), 3, ""), LAMBDA(r, IF(r="", "", LET(t, TEXT(INDEX(POSTIZ!A:A, r)+INDEX(POSTIZ!B:B, r), "d mmm hh:mm")&" · "&INDEX(POSTIZ!F:F, r)&CHAR(10)&INDEX(POSTIZ!H:H, r)&CHAR(10)&INDEX(POSTIZ!I:I, r)&CHAR(10)&INDEX(POSTIZ!K:K, r), u, INDEX(POSTIZ!S:S, r), IF(u="", t, HYPERLINK(u, t&CHAR(10)&"▸ open on Instagram")))))), "")`
 - One colour language across tabs: white = Draft, light blue = Ready (approved, not yet sent), light yellow = Scheduled, light green = Published, light red = Error, grey struck-through = Rejected. POSTIZ colours Approval (J) and Status (K) this way; headers and nav bars stay light grey so yellow only ever means Scheduled.
 - Card colours (conditional format on E2:G60, custom formula on the status line of the card): `=ISNUMBER(SEARCH(CHAR(10)&"Published", E2))` light green · `…"Scheduled"…` light yellow · `…"Error"…` light red · Draft / Ready stay white.
 - Sort keys must be numeric (`A+B`); a text sort key makes SORT return #VALUE!.
@@ -182,11 +183,12 @@ What it does on every edit of POSTIZ:
 | Approval → Draft or Rejected, not live yet | deletes it from Postiz, clears Post ID |
 | Date / Time / Account / Caption / Hashtags / Slides edited on a scheduled row | deletes and re-schedules with the new values |
 | Any edit on a row already live | changes nothing in Postiz, sets Approval back to Ready, notes it in Log |
+| Row failed (Error, no IG Link) | not treated as live: **retry = Draft (removes the failed post) → new Date/Time → Ready** |
 | Time passed or < 5 min away | refuses, writes Error |
 **Edits made through the Sheets API do not fire the script** (installable onEdit only runs for edits made in the Sheets UI). When the user asks you to change a scheduled row yourself: delete the old post in Postiz (`deletePostTool`), schedule the new one (`integrationSchedulePostTool`, same caption, hashtags and Slides, time converted to UTC), then write the new Post ID to L, the new Date/Time to A/B, and a line to Log (Q) like `<d MMM HH:mm> · Claude (asked by <who>) · rescheduled`, plus the reason in Note (`[Claude · asked by <who>] Moved … (was <old date time>).`). Leave Approval as it is: flipping Draft→Ready yourself would be approving on the person's behalf. Verify with `postsListTool` afterwards.
 **House rule for changing a scheduled row:** set Approval → Draft, make all the edits, check them, then set Ready once. Editing a scheduled row directly re-schedules on every cell edit, so half-finished values can be scheduled in between. A single small time shift on the same day may be edited directly. Tell people this rule whenever they ask how to change a post.
 Deleting a whole row does **not** trigger the script: a scheduled post would still go out. Set it to Rejected instead of deleting.
-Plus: every 15 minutes it syncs from Postiz: failures into Error, and the live Instagram link into IG Link (S), which Grid and Carousel turn into clickable links. Formula and script columns are protected with a warning. Everyone with edit access can approve; the script runs as the installer. Triggers run until the installer loses access or revokes it; Google emails a failure summary if it breaks.
+Plus: every 15 minutes it syncs from Postiz: failures into Error, the live Instagram link into IG Link (S) and clears Error once a post is live, which Grid and Carousel turn into clickable links. Formula and script columns are protected with a warning. Everyone with edit access can approve; the script runs as the installer. Triggers run until the installer loses access or revokes it; Google emails a failure summary if it breaks.
 
 ## Rules
 - Nothing goes to Postiz without a person's Ready or an explicit "post it" in chat.
@@ -292,6 +294,8 @@ function syncFromPostiz() {
     if (p.state === 'ERROR') sh.getRange(row, C.error).setValue(p.error || 'Postiz reported an error');
     if (p.state === 'PUBLISHED' && p.releaseURL && sh.getRange(row, C.igLink).getValue() !== p.releaseURL)
       sh.getRange(row, C.igLink).setValue(p.releaseURL);
+    if (p.state === 'PUBLISHED' && p.releaseURL && sh.getRange(row, C.error).getValue() !== '')
+      sh.getRange(row, C.error).setValue('');   // a retry went through: clear the old error
   });
 }
 
@@ -301,7 +305,8 @@ function handleRow_(sh, row, touchedApproval, touchedContent, who) {
   const rowData = readRow_(sh, row);
   const log = msg => sh.getRange(row, C.log).setValue(stamp_() + ' · ' + who + ' · ' + msg);
   const err = msg => { sh.getRange(row, C.error).setValue(msg); log('error: ' + msg); };
-  const live = rowData.postId && rowData.when && rowData.when.getTime() <= Date.now();
+  // A failed post (Error set, no IG link) is not live: Draft removes it, Ready re-schedules it.
+  const live = rowData.postId && rowData.when && rowData.when.getTime() <= Date.now() && (!rowData.error || rowData.igLink);
 
   try {
     if (live) {                                            // already published: never touch Postiz
@@ -355,7 +360,7 @@ function schedule_(sh, row, d, err, log, label) {
 }
 
 function readRow_(sh, row) {
-  const v = sh.getRange(row, 1, 1, C.slides).getValues()[0];
+  const v = sh.getRange(row, 1, 1, C.igLink).getValues()[0];
   const disp = sh.getRange(row, 1, 1, C.slides).getDisplayValues()[0];
   let when = null;
   try {
@@ -367,6 +372,7 @@ function readRow_(sh, row) {
     postId: String(v[C.postId - 1]).trim(),
     account: String(v[C.account - 1]).trim(),
     caption: v[C.caption - 1], hashtags: v[C.hashtags - 1],
+    error: String(v[C.error - 1]).trim(), igLink: String(v[C.igLink - 1]).trim(),
     slides: String(v[C.slides - 1]).split(',').map(s => s.trim()).filter(Boolean),
     when: when
   };
